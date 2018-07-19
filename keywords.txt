@@ -1,0 +1,34 @@
+#######################################
+# Syntax Coloring Map For ArduinoECCX08
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ArduinoECCX08	KEYWORD1
+ECCX08	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+
+serialNumber	KEYWORD2
+random	KEYWORD2
+generatePrivateKey	KEYWORD2
+generatePublicKey	KEYWORD2
+ecdsaVerify	KEYWORD2
+ecSign	KEYWORD2
+readSlot	KEYWORD2
+writeSlot	KEYWORD2
+locked	KEYWORD2
+writeConfiguration	KEYWORD2
+readConfiguration	KEYWORD2
+lock	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
