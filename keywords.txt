@@ -22,6 +22,9 @@ generatePrivateKey	KEYWORD2
 generatePublicKey	KEYWORD2
 ecdsaVerify	KEYWORD2
 ecSign	KEYWORD2
+beginSHA256	KEYWORD2
+updateSHA256	KEYWORD2
+endSHA256	KEYWORD2
 readSlot	KEYWORD2
 writeSlot	KEYWORD2
 locked	KEYWORD2
