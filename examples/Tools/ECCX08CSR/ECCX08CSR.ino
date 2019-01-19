@@ -46,7 +46,7 @@ void setup() {
   Serial.println();
 
   if (!ECCX08.locked()) {
-    String lock = promptAndReadLine("The ECCX08 on your board is not locked, would you like to PERMANTENTLY configure and lock it now? (y/N)", "N");
+    String lock = promptAndReadLine("The ECCX08 on your board is not locked, would you like to PERMANENTLY configure and lock it now? (y/N)", "N");
 
     if (!lock.startsWith("y")) {
       Serial.println("Unfortunately you can't proceed without locking it :(");
