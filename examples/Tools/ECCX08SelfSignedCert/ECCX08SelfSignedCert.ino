@@ -100,6 +100,10 @@ void setup() {
   Serial.println("Here's your self signed cert, enjoy!");
   Serial.println();
   Serial.println(cert);
+  Serial.println();
+
+  Serial.print("SHA1: ");
+  Serial.println(ECCX08SelfSignedCert.sha1());
 }
 
 void loop() {
