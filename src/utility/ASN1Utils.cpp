@@ -79,7 +79,7 @@ int ASN1UtilsClass::signatureLength(const byte signature[])
   int rLength = 32;
   int sLength = 32;
 
-  while (*r == 0x00 && rLength) {
+  while (*r == 0x00 && rLength > 1) {
     r++;
     rLength--;
   }
@@ -88,7 +88,7 @@ int ASN1UtilsClass::signatureLength(const byte signature[])
     rLength++;
   }
 
-  while (*s == 0x00 && sLength) {
+  while (*s == 0x00 && sLength > 1) {
     s++;
     sLength--;
   }
@@ -233,12 +233,12 @@ int ASN1UtilsClass::appendSignature(const byte signature[], byte out[])
   int rLength = 32;
   int sLength = 32;
 
-  while (*r == 0 && rLength) {
+  while (*r == 0 && rLength > 1) {
     r++;
     rLength--;
   }
 
-  while (*s == 0 && sLength) {
+  while (*s == 0 && sLength > 1) {
     s++;
     sLength--;
   }
