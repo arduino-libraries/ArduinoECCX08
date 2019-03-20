@@ -79,21 +79,21 @@ int ASN1UtilsClass::signatureLength(const byte signature[])
   int rLength = 32;
   int sLength = 32;
 
-  while (*r == 0x00 && rLength) {
+  while (rLength && *r == 0x00) {
     r++;
     rLength--;
   }
 
-  if (*r & 0x80) {
+  if (rLength && (*r & 0x80)) {
     rLength++;
   }
 
-  while (*s == 0x00 && sLength) {
+  while (sLength && (*s == 0x00)) {
     s++;
     sLength--;
   }
 
-  if (*s & 0x80) {
+  if (sLength && (*s & 0x80)) {
     sLength++;
   }
 
@@ -102,7 +102,7 @@ int ASN1UtilsClass::signatureLength(const byte signature[])
 
 int ASN1UtilsClass::serialNumberLength(const byte serialNumber[], int length)
 {
-  while (*serialNumber == 0 && length) {
+  while (length && *serialNumber == 0) {
     serialNumber++;
     length--;
   }
@@ -243,11 +243,11 @@ int ASN1UtilsClass::appendSignature(const byte signature[], byte out[])
     sLength--;
   }
 
-  if (*r & 0x80) {
+  if (rLength && (*r & 0x80)) {
     rLength++;  
   }
 
-  if (*s & 0x80) {
+  if (sLength && (*s & 0x80)) {
     sLength++;
   }
 
@@ -260,28 +260,28 @@ int ASN1UtilsClass::appendSignature(const byte signature[], byte out[])
 
   *out++ = ASN1_INTEGER;
   *out++ = rLength;
-  if ((*r & 0x80) && rLength) {
+  if (rLength && (*r & 0x80)) {
     *out++ = 0;
     rLength--;
   }
-  memcpy(out, r, rLength);
+  if (rLength) memcpy(out, r, rLength);
   out += rLength;
 
   *out++ = ASN1_INTEGER;
   *out++ = sLength;
-  if ((*s & 0x80) && sLength) {
+  if (sLength && (*s & 0x80)) {
     *out++ = 0;
     sLength--;
   }
-  memcpy(out, s, sLength);
-  out += rLength;
+  if (sLength) memcpy(out, s, sLength);
+  out += sLength;
 
   return (21 + rLength + sLength);
 }
 
 int ASN1UtilsClass::appendSerialNumber(const byte serialNumber[], int length, byte out[])
 {
-  while (*serialNumber == 0 && length) {
+  while (length && *serialNumber == 0) {
     serialNumber++;
     length--;
   }
@@ -298,7 +298,7 @@ int ASN1UtilsClass::appendSerialNumber(const byte serialNumber[], int length, by
     length--;
   }
 
-  memcpy(out, serialNumber, length);
+  if (length) memcpy(out, serialNumber, length);
 
   return (2 + length);
 }
@@ -321,7 +321,7 @@ int ASN1UtilsClass::appendName(const String& name, int type, byte out[])
 
   *out++ = ASN1_PRINTABLE_STRING;
   *out++ = nameLength;
-  memcpy(out, name.c_str(), nameLength);
+  if (nameLength) memcpy(out, name.c_str(), nameLength);
 
   return (nameLength + 11);
 }
