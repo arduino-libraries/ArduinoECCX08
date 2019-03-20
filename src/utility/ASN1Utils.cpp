@@ -79,7 +79,7 @@ int ASN1UtilsClass::signatureLength(const byte signature[])
   int rLength = 32;
   int sLength = 32;
 
-  while (rLength && *r == 0x00) {
+  while (rLength && (*r == 0x00)) {
     r++;
     rLength--;
   }
