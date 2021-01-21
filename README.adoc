@@ -1,4 +1,12 @@
-= ArduinoECCX08 =
+// Define the repository information in these attributes
+:repository-owner: arduino-libraries
+:repository-name: ArduinoECCX08
+
+= {repository-name} =
+
+image:https://github.com/{repository-owner}/{repository-name}/workflows/Compile%20Examples/badge.svg["Compile Examples Status", link="https://github.com/{repository-owner}/{repository-name}/actions?workflow=Compile+Examples"]
+image:https://github.com/{repository-owner}/{repository-name}/workflows/Arduino%20Lint/badge.svg["Arduino Lint Status", link="https://github.com/{repository-owner}/{repository-name}/actions?workflow=Arduino+Lint"]
+image:https://github.com/{repository-owner}/{repository-name}/workflows/Spell%20Check/badge.svg["Spell Check Status", link="https://github.com/{repository-owner}/{repository-name}/actions?workflow=Spell+Check"]
 
 Arduino Library for the Atmel/Microchip ECC508 and ECC608 crypto chips
 
