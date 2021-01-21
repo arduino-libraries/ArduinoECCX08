@@ -1,0 +1,58 @@
+name: Compile Examples
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/compile-examples.yml"
+      - "examples/**"
+      - "src/**"
+  push:
+    paths:
+      - ".github/workflows/compile-examples.yml"
+      - "examples/**"
+      - "src/**"
+  # Scheduled trigger checks for breakage caused by changes to external resources (libraries, platforms)
+  schedule:
+    # run every Saturday at 3 AM UTC
+    - cron: "0 3 * * 6"
+  # See: https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#workflow_dispatch
+  workflow_dispatch:
+  # See: https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
+  repository_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        board:
+          - fqbn: arduino:mbed:envie_m7
+          - fqbn: arduino:megaavr:uno2018
+          - fqbn: arduino:samd:mkr1000
+          - fqbn: arduino:samd:mkrwifi1010
+          - fqbn: arduino:samd:nano_33_iot
+          - fqbn: arduino:samd:mkrwan1300
+          - fqbn: arduino:samd:mkrwan1310
+          - fqbn: arduino:samd:mkrgsm1400
+          - fqbn: arduino:samd:mkrnb1500
+          - fqbn: arduino:samd:mkrvidor4000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Compile examples
+        uses: arduino/compile-sketches@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fqbn: ${{ matrix.board.fqbn }}
+          libraries: |
+            # Install the library from the local path.
+            - source-path: ./
+            # Additional library dependencies can be listed here.
+            # See: https://github.com/arduino/compile-sketches#libraries
+          sketch-paths: |
+            - ./examples/
