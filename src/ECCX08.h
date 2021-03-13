@@ -23,10 +23,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#ifndef CONFIG_ARDUINO_ECCX08_I2C_ADDR
-#define CONFIG_ARDUINO_ECCX08_I2C_ADDR 0x60
-#endif
-
 class ECCX08Class
 {
 public:
