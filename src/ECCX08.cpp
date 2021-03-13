@@ -38,6 +38,12 @@ ECCX08Class::~ECCX08Class()
 {
 }
 
+int ECCX08Class::begin(uint8_t i2cAddress)
+{
+  _address = i2cAddress;
+  return begin();
+}
+
 int ECCX08Class::begin()
 {
   _wire->begin();
@@ -721,7 +727,11 @@ int ECCX08Class::receiveResponse(void* response, size_t length)
   size_t responseSize = length + 3; // 1 for length header, 2 for CRC
   byte responseBuffer[responseSize];
 
+#if (ESP32)
+  while (_wire->requestFrom((uint8_t)_address, (uint8_t)responseSize, (bool)true) != responseSize && retries--);
+#else
   while (_wire->requestFrom((uint8_t)_address, (size_t)responseSize, (bool)true) != responseSize && retries--);
+#endif
 
   responseBuffer[0] = _wire->read();
 

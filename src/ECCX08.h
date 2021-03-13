@@ -34,6 +34,7 @@ public:
   virtual ~ECCX08Class();
 
   int begin();
+  int begin(uint8_t i2cAddress);
   void end();
 
   int serialNumber(byte sn[]);
