@@ -326,6 +326,28 @@ int ECCX08Class::endSHA256(const byte data[], int length, byte result[])
   return 1;
 }
 
+int ECCX08Class::ecdh(int slot, const byte pubKeyXandY[], byte sharedSecret[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x43, 0x0c, slot, pubKeyXandY, 64)) {
+    return 0;
+  }
+
+  delay(55);
+
+  if (!receiveResponse(sharedSecret, 32)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
 int ECCX08Class::readSlot(int slot, byte data[], int length)
 {
   if (slot < 0 || slot > 15) {

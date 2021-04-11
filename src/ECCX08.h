@@ -50,6 +50,8 @@ public:
   int endSHA256(byte result[]);
   int endSHA256(const byte data[], int length, byte result[]);
 
+  int ecdh(int slot, const byte pubKeyXandY[], byte sharedSecret[]);
+
   int readSlot(int slot, byte data[], int length);
   int writeSlot(int slot, const byte data[], int length);
 

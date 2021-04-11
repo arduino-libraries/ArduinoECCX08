@@ -93,4 +93,28 @@ int PEMUtilsClass::base64Decode(const String in, byte out[])
   return len;
 }
 
+int PEMUtilsClass::xyFromPubKeyPEM(const String publicKeyPem, byte xy[64])
+{
+    byte derBytes[256];
+    int derLen = PEMUtils.base64Decode(publicKeyPem, derBytes);
+    if (derLen < 1) {
+        return -4;
+    }
+    if (derLen < 65) {
+        return -5;
+    }
+
+    int j = derLen-64;
+    if (derBytes[j-1] != 0x04) { // ASN.1 uncompressed public key
+        return -6;
+    }
+
+    // the public key X and Y values are the last 64 bytes
+    for (int i = 0; i < 64; i++) {
+        xy[i] = derBytes[j++];
+    }
+
+    return 0;
+}
+
 PEMUtilsClass PEMUtils;
