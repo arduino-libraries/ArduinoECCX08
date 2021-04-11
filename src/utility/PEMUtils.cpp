@@ -18,6 +18,7 @@
 */
 
 #include "PEMUtils.h"
+#include "b64.h"
 
 String PEMUtilsClass::base64Encode(const byte in[], unsigned int length, const char* prefix, const char* suffix)
 {
@@ -66,6 +67,32 @@ String PEMUtilsClass::base64Encode(const byte in[], unsigned int length, const c
   }
 
   return out;
+}
+
+int PEMUtilsClass::base64Decode(const String in, byte out[])
+{
+  String inBase64 = String(in);
+  inBase64.trim();
+  // check PEM encoded
+  if ( inBase64.startsWith("-----BEGIN ") && inBase64.endsWith("-----")) {
+      int endLine1Char = inBase64.indexOf('\n');
+      if (endLine1Char < 0) {
+          return -2;
+      }
+      int endLastLineChar = inBase64.lastIndexOf('\n');
+      if (endLastLineChar < 0) {
+          return -3;
+      }
+      inBase64 = inBase64.substring(endLine1Char, endLastLineChar);
+      for (int i=inBase64.indexOf('\n'); i != -1; i=inBase64.indexOf('\n')) {
+        inBase64.remove(i,1);
+      }
+  }
+  const char *input = inBase64.c_str();
+
+  int len = decode_base64(input, out);
+
+  return len;
 }
 
 PEMUtilsClass PEMUtils;
