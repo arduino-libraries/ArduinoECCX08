@@ -88,10 +88,8 @@ int PEMUtilsClass::base64Decode(const String in, byte out[])
         inBase64.remove(i,1);
       }
   }
-  const char *input = inBase64.c_str();
 
-  int len = decode_base64(input, out);
-
+  int len = decode_base64((unsigned char*)inBase64.c_str(), out); 
   return len;
 }
 
