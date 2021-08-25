@@ -22,14 +22,34 @@ void setup() {
     while (1);
   }
 
-  byte sharedSecret[64];
-  if (!ECCX08.ecdh(2, sharedSecret)) {
+  int privateKeySlot = 2;
+  int counterpartyKeySlot = 3;
+
+  byte devicePubKey[64];
+  if (!ECCX08.generatePrivateKey(privateKeySlot, devicePubKey)){
+    Serial.println("Failed to generate private key.");
+  } else {
+    Serial.println("Device Public key:");
+    printHex(devicePubKey, 64);
+  }
+
+  byte counterPartyPubKey[64];
+  // Yes, this function actually returns a public key.
+  if (!ECCX08.generatePrivateKey(counterpartyKeySlot, counterPartyPubKey)){
+    Serial.println("Failed to generate public key.");
+  } else {
+    Serial.println("Counterparty Public key:");
+    printHex(counterPartyPubKey, 64);
+  }
+
+  byte sharedSecret[32];
+  if (!ECCX08.ecdh(privateKeySlot, counterPartyPubKey, sharedSecret)) {
     Serial.println("The ecdh function failed!");
     while (1);
   }
 
   Serial.print("Shared secret = ");
-  printHex(sharedSecret, 64);
+  printHex(sharedSecret, 32);
 }
 
 void loop() {
