@@ -326,20 +326,26 @@ int ECCX08Class::endSHA256(const byte data[], int length, byte result[])
   return 1;
 }
 
-int ECCX08Class::ecdh(int slot, const byte pubKeyXandY[], byte sharedSecret[])
+int ECCX08Class::ecdh(int slot, byte mode, const byte pubKeyXandY[], byte output[])
 {
   if (!wakeup()) {
     return 0;
   }
 
-  if (!sendCommand(0x43, 0x0c, slot, pubKeyXandY, 64)) {
+  if (!sendCommand(0x43, mode, slot, pubKeyXandY, 64)) {
     return 0;
   }
 
   delay(55);
 
-  if (!receiveResponse(sharedSecret, 32)) {
-    return 0;
+  if (mode == ECDH_MODE_OUTPUT) {
+    if (!receiveResponse(output, 32)) {
+      return 0;
+    }
+  } else if (mode == ECDH_MODE_TEMPKEY) {
+    if (!receiveResponse(output, 1)) {
+      return 0;
+    }
   }
 
   delay(1);

@@ -43,13 +43,22 @@ void setup() {
   }
 
   byte sharedSecret[32];
-  if (!ECCX08.ecdh(privateKeySlot, counterPartyPubKey, sharedSecret)) {
+  if (!ECCX08.ecdh(privateKeySlot, ECDH_MODE_OUTPUT, counterPartyPubKey, sharedSecret)) {
     Serial.println("The ecdh function failed!");
     while (1);
   }
 
   Serial.print("Shared secret = ");
   printHex(sharedSecret, 32);
+
+  byte output[1];
+  if (!ECCX08.ecdh(privateKeySlot, ECDH_MODE_TEMPKEY, counterPartyPubKey, output)) {
+    Serial.println("The ecdh function failed!");
+    while (1);
+  }
+
+  Serial.print("Return code = ");
+  printHex(output, 1);
 }
 
 void loop() {

@@ -50,7 +50,9 @@ public:
   int endSHA256(byte result[]);
   int endSHA256(const byte data[], int length, byte result[]);
 
-  int ecdh(int slot, const byte pubKeyXandY[], byte sharedSecret[]);
+  int ecdh(int slot, byte mode, const byte pubKeyXandY[], byte sharedSecret[]);
+  #define ECDH_MODE_TEMPKEY               ((uint8_t)0x08)         //!< ECDH mode: write to TempKey
+  #define ECDH_MODE_OUTPUT                ((uint8_t)0x0c)         //!< ECDH mode: write to buffer
 
   int readSlot(int slot, byte data[], int length);
   int writeSlot(int slot, const byte data[], int length);
