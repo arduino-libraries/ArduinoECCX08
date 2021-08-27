@@ -54,6 +54,15 @@ public:
   #define ECDH_MODE_TEMPKEY               ((uint8_t)0x08)         //!< ECDH mode: write to TempKey
   #define ECDH_MODE_OUTPUT                ((uint8_t)0x0c)         //!< ECDH mode: write to buffer
 
+  int AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[]);
+  int AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[]);
+  #define AES_MODE_ENCRYPT                ((uint8_t)0x00)         //!< AES mode: encrypt
+  #define AES_MODE_GFM                    ((uint8_t)0x03)         //!< AES mode: Galois Field Multiply
+  int AESGenIV(byte IV[]);
+
+  int incrementCounter(int slot, byte counter[]);
+  int readCounter(int slot, byte counter[]);
+
   int readSlot(int slot, byte data[], int length);
   int writeSlot(int slot, const byte data[], int length);
 

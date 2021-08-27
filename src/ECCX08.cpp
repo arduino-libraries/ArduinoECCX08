@@ -354,6 +354,103 @@ int ECCX08Class::ecdh(int slot, byte mode, const byte pubKeyXandY[], byte output
   return 1;
 }
 
+int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[])
+{
+  return 0;
+}
+
+/** \brief Generates AES GCM initialization vector.
+ *
+ * \param[in,out] IV            Initialization vector to be generated
+ *                              (12 bytes). See
+ *                              NIST Special Publication 800-38D
+ *                              8.2.1 Deterministic Construction
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESGenIV(byte IV[])
+{
+  // The device ID is determined by the public key in slot 0
+  byte pubKey[64];
+  if (!generatePublicKey(0, pubKey)){
+    Serial.println("AESGenIV: failed to obtain device ID");
+    return 0;
+  }
+  // XOR the 64 public key bytes to get 4 bytes
+  byte deviceID[4] = {0x00};
+  for (int i=0; i<64; i++){
+    deviceID[i%4] ^= pubKey[i];
+  }
+  // First 4 bytes of IV are device ID
+  for (int i=0; i<4; i++){
+    IV[i] = deviceID[i];
+  }
+
+  // Device only has two 4 byte counters
+  // instead of 8 byte counter.
+  byte counter0[4];
+  if (!incrementCounter(0, counter0)){
+    Serial.println("AESGenIV: failed to increment counter");
+    // TODO: Reset counter0 and increment counter1
+    return 0;
+  }
+  byte counter1[4];
+  if (!readCounter(1, counter1)){
+    Serial.println("AESGenIV: failed to read counter");
+    return 0;
+  }
+  // Last 8 bytes of IV are counter
+  for (int i=0; i<4; i++){
+    // chip counter is little endian
+    IV[11-i] = counter0[i];
+    IV[7-i] = counter1[i];
+  }
+
+  return 1;
+}
+
+int ECCX08Class::readCounter(int slot, byte counter[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+  if (!sendCommand(0x24, 0x00, slot)) {
+    return 0;
+  }
+
+  delay(51);
+
+  if (!receiveResponse(counter, 4)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
+int ECCX08Class::incrementCounter(int slot, byte counter[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+  if (!sendCommand(0x24, 0x01, slot)) {
+    return 0;
+  }
+
+  delay(51);
+
+  if (!receiveResponse(counter, 4)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
 int ECCX08Class::readSlot(int slot, byte data[], int length)
 {
   if (slot < 0 || slot > 15) {
