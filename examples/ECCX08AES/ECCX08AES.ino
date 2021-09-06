@@ -4,6 +4,9 @@
   This sketch uses the ECC608 to compute
   the AES_128_GCM encryption for some data
 
+  This sketch assumes TempKey has been set
+  (ECDH sketch will do this)
+
 */
 
 #include <ArduinoECCX08.h>
@@ -30,14 +33,28 @@ void setup() {
     printHex(devicePubKey, 64);
   }
 
-  byte IV[12];
-  if (!ECCX08.AESGenIV(IV)){
-    Serial.println("Failed to initialize IV.");
-  } else {
-    Serial.print("IV: ");
-    printHex(IV, 12);
-  }
+  byte ad[20] = {0x14};
+  uint64_t adLength = (sizeof(ad));
+  Serial.print("AD:  ");
+  printHex(ad, adLength);
+  byte pt[40] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28};
+  uint64_t ptLength = (sizeof(pt));
+  Serial.print("PT:  ");
+  printHex(pt, ptLength);
 
+  byte IV[12];
+  byte ct[40];
+  byte tag[16];
+  if (!ECCX08.AESEncrypt(IV, ad, pt, ct, tag, adLength, ptLength)){
+    Serial.println("Failed to encrypt.");
+  } else {
+    Serial.print("IV:  ");
+    printHex(IV, 12);
+    Serial.print("CT:  ");
+    printHex(ct, ptLength);
+    Serial.print("tag: ");
+    printHex(tag, 16);
+  }
 }
 
 void loop() {

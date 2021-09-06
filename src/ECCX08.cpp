@@ -354,14 +354,243 @@ int ECCX08Class::ecdh(int slot, byte mode, const byte pubKeyXandY[], byte output
   return 1;
 }
 
-int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[])
+int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ptLength)
 {
-  return 0;
+  byte H[16] = {0x00};
+  if (!AESBlockEncrypt(H)){
+    Serial.println("AESEncrypt: failed to compute H.");
+    return 0;
+  }
+
+  byte J0[16] = {0x00};
+  if (!AESGenIV(IV)){
+    Serial.println("AESEncrypt: failed to generate IV.");
+    return 0;
+  }
+  memcpy(J0, IV, 12);
+  J0[15] = 0x01;
+
+  byte counterBlock[16];
+  memcpy(counterBlock, J0, 16);
+  if (!AESIncrementBlock(counterBlock)){
+    Serial.println("AESEncrypt: failed to increment counter block.");
+    return 0;
+  }
+
+  if (!AESGCTR(counterBlock, pt, ct, ptLength)){
+    Serial.println("AESEncrypt: failed to encrypt.");
+    return 0;
+  }
+
+  int adPad = (-adLength) % 16;
+  int ctPad = (-ptLength) % 16;
+
+  byte S[16];
+  uint64_t inputLength = adLength+adPad+ptLength+ctPad+16;
+  byte input[inputLength];
+  memcpy(input, ad, adLength);
+  memset(input+adLength, 0, adPad);
+  memcpy(input+adLength+adPad, ct, ptLength);
+  memset(input+adLength+adPad+ptLength, 0, ctPad);
+  // Device is little endian
+  // GCM specification requires big endian length representation
+  // Hence we reverse the byte order of adLength and ptLength
+  for (int i=0; i<8; i++){
+    input[adLength+adPad+ptLength+ctPad+i] = (adLength >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ptLength+ctPad+8+i] = (ptLength >> (56-8*i)) & 0xFF;
+  }
+
+  if (!AESGHASH(H, input, S, inputLength)){
+    Serial.println("AESEncrypt: failed to compute GHASH.");
+    return 0;
+  }
+
+  if (!AESGCTR(J0, S, tag, 16)){
+    Serial.println("AESEncrypt: failed to compute tag.");
+    return 0;
+  }
+
+  return 1;
+}
+
+
+/** \brief GCTR function, see
+ *   NIST Special Publication 800-38D
+ *   6.5
+ *
+ * \param[in,out] counterBlock    The initial counter block
+ *                                (16 bytes).
+ * \param[in] input               The input bit string
+ * \param[out] output             The output bit string
+ * \param[in] inputLength         The length of the input
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESGCTR(byte counterBlock[], byte input[], byte output[], const uint64_t inputLength)
+{
+  if(inputLength == 0){
+    return 1;
+  }
+  int remainder = inputLength % 16;
+  int n = inputLength / 16 + (remainder != 0);
+
+  int i;
+  for (i=0; i<n-1; i++){
+    byte temp[16];
+    memcpy(temp, counterBlock, 16);
+
+    if (!AESBlockEncrypt(temp)){
+      Serial.println("AESGCTR: failed to encrypt counter block.");
+      return 0;
+    }
+
+    for (int j=0; j<16; j++){
+      output[16*i+j] = input[16*i+j]^temp[j];
+    }
+
+    if (!AESIncrementBlock(counterBlock)){
+      Serial.println("AESGCTR: failed to increment counter block.");
+      return 0;
+    }
+  }
+  byte temp[16];
+  memcpy(temp, counterBlock, 16);
+
+  if (!AESBlockEncrypt(temp)){
+    Serial.println("AESGCTR: failed to encrypt counter block.");
+    return 0;
+  }
+
+  remainder = (remainder == 0) ? 16 : remainder;
+  for (int j=0; j<remainder; j++){
+    output[16*i+j] = input[16*i+j]^temp[j];
+  }
+
+  return 1;
+}
+
+/** \brief GHASH function, see
+ *   NIST Special Publication 800-38D
+ *   6.4
+ *
+ * \param[in] H                   The hash subkey H
+ *                                (16 bytes).
+ * \param[in] input               The input bit string
+ * \param[out] output             The output block
+ *                                (16 bytes)
+ * \param[in] inputLength         The length of the input
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESGHASH(byte H[], byte input[], byte output[], const uint64_t inputLength)
+{
+  if (inputLength % 16 != 0){
+    Serial.println("GHASH is only defined for multiples of 16 bytes.");
+    return 0;
+  }
+
+  memset(output, 0, 16);
+  for (int i=0; i< inputLength/16; i++){
+    for (int j=0; j<16; j++){
+      output[j] ^= input[16*i+j];
+    }
+    if (!AESBlockMultiplication(H, output)){
+      return 0;
+    }
+  }
+  return 1;
+}
+
+/** \brief Increments the right-most 32 bits of the block
+ * regarded as an integer mod 2^32
+ *
+ * \param[in,out] counterBlock  The block to be incremented
+ *                              (16 bytes). See
+ *                              NIST Special Publication 800-38D
+ *                              6.2
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESIncrementBlock(byte counterBlock[])
+{
+// Increment the big-endian counter value
+  int i;
+  for (i = 0; i < 4; i++) {
+    if (++(counterBlock[15 - i]) != 0) {
+        break;
+    }
+  }
+  if (i >= 4) {
+    Serial.println("AESIncrementBlock: counter overflowed.");
+    return 0;
+  }
+  return 1;
+}
+
+/** \brief AES encrypts a block using TempKey
+ *
+ * \param[in,out] block         The block to be encrypted
+ *                              (16 bytes).
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESBlockEncrypt(byte block[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+  if (!sendCommand(0x51, 0x00, 0xFFFF, block, 16)) {
+    return 0;
+  }
+
+  delay(51);
+
+  if (!receiveResponse(block, 16)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
+/** \brief AES block multiplication with hash key H
+ *
+ * \param[in]     H             The hash subkey
+ *                              (16 bytes)
+ * \param[in,out] block         The block to be multiplied
+ *                              (16 bytes).
+ *
+ * \return 1 on success, otherwise 0.
+ */
+int ECCX08Class::AESBlockMultiplication(byte H[], byte block[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+  byte data[32];
+  memcpy(data, H, 16);
+  memcpy(data+16, block, 16);
+  if (!sendCommand(0x51, 0x03, 0xFFFF, block, 16)) {
+    return 0;
+  }
+
+  delay(51);
+
+  if (!receiveResponse(block, 16)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
 }
 
 /** \brief Generates AES GCM initialization vector.
  *
- * \param[in,out] IV            Initialization vector to be generated
+ * \param[out] IV               Initialization vector to be generated
  *                              (12 bytes). See
  *                              NIST Special Publication 800-38D
  *                              8.2.1 Deterministic Construction
@@ -409,6 +638,13 @@ int ECCX08Class::AESGenIV(byte IV[])
   return 1;
 }
 
+/** \brief Reads the counter on the device.
+ *
+ * \param[in] slot           counter slot to read from
+ * \param[out] counter       counter value (4 bytes)
+ *
+ * \return 1 on success, otherwise 0.
+ */
 int ECCX08Class::readCounter(int slot, byte counter[])
 {
   if (!wakeup()) {
@@ -430,6 +666,13 @@ int ECCX08Class::readCounter(int slot, byte counter[])
   return 1;
 }
 
+/** \brief Increments the counter on the device.
+ *
+ * \param[in] slot           counter slot to increment
+ * \param[out] counter       counter value (4 bytes)
+ *
+ * \return 1 on success, otherwise 0.
+ */
 int ECCX08Class::incrementCounter(int slot, byte counter[])
 {
   if (!wakeup()) {
