@@ -413,6 +413,71 @@ int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag
   return 1;
 }
 
+int ECCX08Class::AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ctLength)
+{
+  uint64_t maxLength = 1ull << 36;
+  if (adLength >= maxLength || ctLength >= maxLength){
+    return 0;
+  }
+
+  byte H[16] = {0x00};
+  if (!AESBlockEncrypt(H)){
+    return 0;
+  }
+
+  byte J0[16] = {0x00};
+  memcpy(J0, IV, 12);
+  J0[15] = 0x01;
+
+  int adPad = (-adLength) % 16;
+  int ctPad = (-ctLength) % 16;
+
+  byte S[16];
+  uint64_t inputLength = adLength+adPad+ctLength+ctPad+16;
+  byte input[inputLength];
+  memcpy(input, ad, adLength);
+  memset(input+adLength, 0, adPad);
+  memcpy(input+adLength+adPad, ct, ctLength);
+  memset(input+adLength+adPad+ctLength, 0, ctPad);
+  // Device is little endian
+  // GCM specification requires big endian length representation
+  // Hence we reverse the byte order of adLength and ctLength
+  for (int i=0; i<8; i++){
+    input[adLength+adPad+ctLength+ctPad+i] = (adLength >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ctLength+ctPad+8+i] = (ctLength >> (56-8*i)) & 0xFF;
+  }
+
+  if (!AESGHASH(H, input, S, inputLength)){
+    return 0;
+  }
+
+  byte tagComputed[16];
+  if (!AESGCTR(J0, S, tagComputed, 16)){
+    return 0;
+  }
+
+  uint8_t equalBytes=0;
+  for (int i=0; i<16; i++){
+    equalBytes += (tag[i]==tagComputed[i]);
+  }
+  if (equalBytes!=16){
+    // tag mismatch
+    return 0;
+  }
+
+  byte counterBlock[16];
+  memcpy(counterBlock, J0, 16);
+  if (!AESIncrementBlock(counterBlock)){
+    return 0;
+  }
+
+  if (!AESGCTR(counterBlock, ct, pt, ctLength)){
+    return 0;
+  }
+
+  return 1;
+}
+
 
 /** \brief GCTR function, see
  *   NIST Special Publication 800-38D

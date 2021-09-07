@@ -55,7 +55,7 @@ public:
   #define ECDH_MODE_OUTPUT                ((uint8_t)0x0c)         //!< ECDH mode: write to buffer
 
   int AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ptLength);
-  int AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[]);
+  int AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ctLength);
 
   int AESGCTR(byte counterBlock[], byte input[], byte output[], const uint64_t inputLength);
   int AESGHASH(byte counterBlock[], byte input[], byte output[], const uint64_t inputLength);

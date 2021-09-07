@@ -55,6 +55,14 @@ void setup() {
     Serial.print("tag: ");
     printHex(tag, 16);
   }
+
+  byte ptDecrypted[40];
+  if (!ECCX08.AESDecrypt(IV, ad, ptDecrypted, ct, tag, adLength, ptLength)){
+    Serial.println("Failed to decrypt.");
+  } else {
+    Serial.print("PT:  ");
+    printHex(ptDecrypted, ptLength);
+  }
 }
 
 void loop() {
