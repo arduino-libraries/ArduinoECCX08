@@ -392,12 +392,14 @@ int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag
   memset(input+adLength, 0, adPad);
   memcpy(input+adLength+adPad, ct, ptLength);
   memset(input+adLength+adPad+ptLength, 0, ctPad);
-  // Device is little endian
-  // GCM specification requires big endian length representation
-  // Hence we reverse the byte order of adLength and ptLength
+  // Device is little endian.
+  // GCM specification requires big endian representation
+  // of bit length.
+  // Hence we multiply by 8 and
+  // reverse the byte order of adLength and ptLength.
   for (int i=0; i<8; i++){
-    input[adLength+adPad+ptLength+ctPad+i] = (adLength >> (56-8*i)) & 0xFF;
-    input[adLength+adPad+ptLength+ctPad+8+i] = (ptLength >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ptLength+ctPad+i] = (adLength*8 >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ptLength+ctPad+8+i] = (ptLength*8 >> (56-8*i)) & 0xFF;
   }
 
   if (!AESGHASH(H, input, S, inputLength)){
@@ -439,12 +441,14 @@ int ECCX08Class::AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag
   memset(input+adLength, 0, adPad);
   memcpy(input+adLength+adPad, ct, ctLength);
   memset(input+adLength+adPad+ctLength, 0, ctPad);
-  // Device is little endian
-  // GCM specification requires big endian length representation
-  // Hence we reverse the byte order of adLength and ctLength
+  // Device is little endian.
+  // GCM specification requires big endian representation
+  // of bit length.
+  // Hence we multiply by 8 and
+  // reverse the byte order of adLength and ptLength.
   for (int i=0; i<8; i++){
-    input[adLength+adPad+ctLength+ctPad+i] = (adLength >> (56-8*i)) & 0xFF;
-    input[adLength+adPad+ctLength+ctPad+8+i] = (ctLength >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ctLength+ctPad+i] = (adLength*8 >> (56-8*i)) & 0xFF;
+    input[adLength+adPad+ctLength+ctPad+8+i] = (ctLength*8 >> (56-8*i)) & 0xFF;
   }
 
   if (!AESGHASH(H, input, S, inputLength)){
