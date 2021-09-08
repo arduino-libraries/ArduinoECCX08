@@ -637,7 +637,7 @@ int ECCX08Class::AESBlockMultiplication(byte H[], byte block[])
   byte data[32];
   memcpy(data, H, 16);
   memcpy(data+16, block, 16);
-  if (!sendCommand(0x51, 0x03, 0xFFFF, block, 16)) {
+  if (!sendCommand(0x51, 0x03, 0xFFFF, data, 32)) {
     return 0;
   }
 
