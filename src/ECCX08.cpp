@@ -644,7 +644,7 @@ int ECCX08Class::AESBlockEncrypt(byte block[])
     return 0;
   }
 
-  delay(51);
+  delay(9);
 
   if (!receiveResponse(block, 16)) {
     return 0;
@@ -677,7 +677,7 @@ int ECCX08Class::AESBlockMultiplication(byte H[], byte block[])
     return 0;
   }
 
-  delay(51);
+  delay(9);
 
   if (!receiveResponse(block, 16)) {
     return 0;
@@ -755,7 +755,7 @@ int ECCX08Class::readCounter(int slot, byte counter[])
     return 0;
   }
 
-  delay(51);
+  delay(9);
 
   if (!receiveResponse(counter, 4)) {
     return 0;
@@ -783,7 +783,7 @@ int ECCX08Class::incrementCounter(int slot, byte counter[])
     return 0;
   }
 
-  delay(51);
+  delay(9);
 
   if (!receiveResponse(counter, 4)) {
     return 0;
