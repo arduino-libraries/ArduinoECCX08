@@ -354,6 +354,22 @@ int ECCX08Class::ecdh(int slot, byte mode, const byte pubKeyXandY[], byte output
   return 1;
 }
 
+/** \brief AES_GCM encryption function, see
+ *   NIST Special Publication 800-38D
+ *   7.1, using TempKey.
+ *
+ * \param[out] IV                 Initialization vector
+ *                                (12 bytes)
+ * \param[in] ad                  Associated data
+ * \param[in] pt                  Plaintext
+ * \param[out] ct                 Ciphertext
+ * \param[out] tag                Authentication tag
+ *                                (16 bytes)
+ * \param[in] adLength            The length of ad
+ * \param[in] ptLength            The length of pt
+ *
+ * \return 1 on success, otherwise 0.
+ */
 int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ptLength)
 {
   byte H[16] = {0x00};
@@ -415,6 +431,22 @@ int ECCX08Class::AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag
   return 1;
 }
 
+/** \brief AES_GCM decryption function, see
+ *   NIST Special Publication 800-38D
+ *   7.2, using TempKey.
+ *
+ * \param[in] IV                 Initialization vector
+ *                               (12 bytes)
+ * \param[in] ad                 Associated data
+ * \param[out] pt                Plaintext
+ * \param[in] ct                 Ciphertext
+ * \param[in] tag                Authentication tag
+ *                               (16 bytes)
+ * \param[in] adLength           The length of ad
+ * \param[in] ctLength           The length of ct
+ *
+ * \return 1 on success, otherwise 0.
+ */
 int ECCX08Class::AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ctLength)
 {
   uint64_t maxLength = 1ull << 36;
