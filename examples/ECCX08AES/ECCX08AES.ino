@@ -6,6 +6,8 @@
 
   This sketch assumes TempKey has been set
   (ECDH sketch will do this)
+  and derives a deviceID from the public key
+  corresponding to the key in slot 0.
 
 */
 
