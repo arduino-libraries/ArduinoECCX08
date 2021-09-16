@@ -718,10 +718,11 @@ int ECCX08Class::AESGenIV(byte IV[])
 
   // Device only has two 4 byte counters
   // instead of 8 byte counter.
+  // We increment one counter and read the other
+  // This should be enough for the lifetime of the device
   byte counter0[4];
   if (!incrementCounter(0, counter0)){
     Serial.println("AESGenIV: failed to increment counter");
-    // TODO: Reset counter0 and increment counter1
     return 0;
   }
   byte counter1[4];
