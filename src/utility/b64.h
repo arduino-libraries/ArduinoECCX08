@@ -5,7 +5,7 @@
   
   MIT License (MIT) Copyright (c) 2016 Densaugeo
 
-  Any other base64 decode function would do if there is an Arduino prefered one somewhere?
+  Any other base64 decode function would do if there is an Arduino preferred one somewhere?
 */ 
 unsigned char base64_to_binary(unsigned char c) {
   // Capital letters - 'A' is ascii 65 and base64 0
