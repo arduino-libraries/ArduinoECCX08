@@ -21,16 +21,15 @@
 
 #include "ECCX08.h"
 
-const uint32_t ECCX08Class::_wakeupFrequency = 100000u;  // 100 kHz
+const uint32_t ECCX08Class::_wakeupFrequency = 100000u; // 100 kHz
 #ifdef __AVR__
-const uint32_t ECCX08Class::_normalFrequency = 400000u;  // 400 kHz
+const uint32_t ECCX08Class::_normalFrequency = 400000u; // 400 kHz
 #else
 const uint32_t ECCX08Class::_normalFrequency = 1000000u; // 1 MHz
 #endif
 
-ECCX08Class::ECCX08Class(TwoWire& wire, uint8_t address) :
-  _wire(&wire),
-  _address(address)
+ECCX08Class::ECCX08Class(TwoWire &wire, uint8_t address) : _wire(&wire),
+                                                           _address(address)
 {
 }
 
@@ -44,10 +43,13 @@ int ECCX08Class::begin()
 
   wakeup();
   idle();
-  
+
   long ver = version() & 0x0F00000;
 
-  if (ver != 0x0500000 && ver != 0x0600000) {
+  if (ver != 0x0500000 && ver != 0x0600000)
+  {
+    Serial.println("ECCX08: Wrong version");
+    Serial.println(ver, HEX);
     return 0;
   }
 
@@ -66,15 +68,18 @@ void ECCX08Class::end()
 
 int ECCX08Class::serialNumber(byte sn[])
 {
-  if (!read(0, 0, &sn[0], 4)) {
+  if (!read(0, 0, &sn[0], 4))
+  {
     return 0;
   }
 
-  if (!read(0, 2, &sn[4], 4)) {
+  if (!read(0, 2, &sn[4], 4))
+  {
     return 0;
   }
 
-  if (!read(0, 3, &sn[8], 4)) {
+  if (!read(0, 3, &sn[8], 4))
+  {
     return 0;
   }
 
@@ -83,19 +88,22 @@ int ECCX08Class::serialNumber(byte sn[])
 
 String ECCX08Class::serialNumber()
 {
-  String result = (char*)NULL;
+  String result = (char *)NULL;
   byte sn[12];
 
-  if (!serialNumber(sn)) {
+  if (!serialNumber(sn))
+  {
     return result;
   }
 
   result.reserve(18);
 
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < 9; i++)
+  {
     byte b = sn[i];
 
-    if (b < 16) {
+    if (b < 16)
+    {
       result += "0";
     }
     result += String(b, HEX);
@@ -120,10 +128,15 @@ long ECCX08Class::random(long min, long max)
 
   long diff = max - min;
 
-  long r;
-  random((byte*)&r, sizeof(r));
+  int32_t r;
 
-  if (r < 0) {
+  // Serial.println(" Size of uint32_t: " + String(sizeof(r)));
+  // Serial.println(" Size of int: " + String(sizeof(a)));
+  // Serial.println(" Size of char: " + String(sizeof(c)));
+  random((byte *)&r, sizeof(r));
+
+  if (r < 0)
+  {
     r = -r;
   }
 
@@ -134,23 +147,39 @@ long ECCX08Class::random(long min, long max)
 
 int ECCX08Class::random(byte data[], size_t length)
 {
-  if (!wakeup()) {
+  // Serial.println("(random) | Entered| Inputs: " + String(length));
+
+  if (!wakeup())
+  {
+    Serial.println("(random) |wakeup");
     return 0;
   }
 
-  while (length) {
-    if (!sendCommand(0x1b, 0x00, 0x0000)) {
+  while (length)
+  {
+    // Serial.println("(random) | Entered While loop ");
+    if (!sendCommand(0x1b, 0x00, 0x0000))
+    {
+      Serial.println("(random) | Failed to send command");
       return 0;
     }
 
     delay(23);
 
     byte response[32];
+    // Serial.println(" ****************** sizeof(response) : " + String(sizeof(response)));
 
-    if (!receiveResponse(response, sizeof(response))) {
+    if (!receiveResponse_nocrc(response, sizeof(response)))
+    {
+      Serial.println("(random)| Failed to receive response ");
       return 0;
     }
-
+    //  Serial.print("(random) | response:      ");
+    // for(int i=0;i<sizeof(response);i++)
+    // {
+    // Serial.print(String(response[i],HEX));
+    // Serial.print(" ");
+    // }
     int copyLength = min(32, (int)length);
     memcpy(data, response, copyLength);
 
@@ -167,17 +196,20 @@ int ECCX08Class::random(byte data[], size_t length)
 
 int ECCX08Class::generatePrivateKey(int slot, byte publicKey[])
 {
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x40, 0x04, slot)) {
+  if (!sendCommand(0x40, 0x04, slot))
+  {
     return 0;
   }
 
   delay(115);
 
-  if (!receiveResponse(publicKey, 64)) {
+  if (!receiveResponse(publicKey, 74))
+  {
     return 0;
   }
 
@@ -190,17 +222,22 @@ int ECCX08Class::generatePrivateKey(int slot, byte publicKey[])
 
 int ECCX08Class::generatePublicKey(int slot, byte publicKey[])
 {
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x40, 0x00, slot)) {
+  if (!sendCommand(0x40, 0x00, slot))
+  {
+    Serial.println("Send Command Failed");
     return 0;
   }
 
   delay(115);
 
-  if (!receiveResponse(publicKey, 64)) {
+  if (!receiveResponse_nocrc(publicKey, 64))
+  {
+    Serial.println("Receive Response Failed");
     return 0;
   }
 
@@ -213,11 +250,13 @@ int ECCX08Class::generatePublicKey(int slot, byte publicKey[])
 
 int ECCX08Class::ecdsaVerify(const byte message[], const byte signature[], const byte pubkey[])
 {
-  if (!challenge(message)) {
+  if (!challenge(message))
+  {
     return 0;
   }
 
-  if (!verify(signature, pubkey)) {
+  if (!verify(signature, pubkey))
+  {
     return 0;
   }
 
@@ -228,15 +267,18 @@ int ECCX08Class::ecSign(int slot, const byte message[], byte signature[])
 {
   byte rand[32];
 
-  if (!random(rand, sizeof(rand))) {
+  if (!random(rand, sizeof(rand)))
+  {
     return 0;
   }
 
-  if (!challenge(message)) {
+  if (!challenge(message))
+  {
     return 0;
   }
 
-  if (!sign(slot, signature)) {
+  if (!sign(slot, signature))
+  {
     return 0;
   }
 
@@ -247,24 +289,28 @@ int ECCX08Class::beginSHA256()
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x47, 0x00, 0x0000)) {
+  if (!sendCommand(0x47, 0x00, 0x0000))
+  {
     return 0;
   }
 
   delay(9);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -275,24 +321,28 @@ int ECCX08Class::updateSHA256(const byte data[])
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x47, 0x01, 64, data, 64)) {
+  if (!sendCommand(0x47, 0x01, 64, data, 64))
+  {
     return 0;
   }
 
   delay(9);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -306,17 +356,20 @@ int ECCX08Class::endSHA256(byte result[])
 
 int ECCX08Class::endSHA256(const byte data[], int length, byte result[])
 {
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x47, 0x02, length, data, length)) {
+  if (!sendCommand(0x47, 0x02, length, data, length))
+  {
     return 0;
   }
 
   delay(9);
 
-  if (!receiveResponse(result, 32)) {
+  if (!receiveResponse(result, 32))
+  {
     return 0;
   }
 
@@ -328,22 +381,27 @@ int ECCX08Class::endSHA256(const byte data[], int length, byte result[])
 
 int ECCX08Class::readSlot(int slot, byte data[], int length)
 {
-  if (slot < 0 || slot > 15) {
+  if (slot < 0 || slot > 15)
+  {
     return -1;
   }
 
-  if (length % 4 != 0) {
+  if (length % 4 != 0)
+  {
     return 0;
   }
 
   int chunkSize = 32;
 
-  for (int i = 0; i < length; i += chunkSize) {
-    if ((length - i) < 32) {
+  for (int i = 0; i < length; i += chunkSize)
+  {
+    if ((length - i) < 32)
+    {
       chunkSize = 4;
     }
 
-    if (!read(2, addressForSlotOffset(slot, i), &data[i], chunkSize)) {
+    if (!read(2, addressForSlotOffset(slot, i), &data[i], chunkSize))
+    {
       return 0;
     }
   }
@@ -353,22 +411,27 @@ int ECCX08Class::readSlot(int slot, byte data[], int length)
 
 int ECCX08Class::writeSlot(int slot, const byte data[], int length)
 {
-  if (slot < 0 || slot > 15) {
+  if (slot < 0 || slot > 15)
+  {
     return -1;
   }
 
-  if (length % 4 != 0) {
+  if (length % 4 != 0)
+  {
     return 0;
   }
 
   int chunkSize = 32;
 
-  for (int i = 0; i < length; i += chunkSize) {
-    if ((length - i) < 32) {
+  for (int i = 0; i < length; i += chunkSize)
+  {
+    if ((length - i) < 32)
+    {
       chunkSize = 4;
     }
 
-    if (!write(2, addressForSlotOffset(slot, i), &data[i], chunkSize)) {
+    if (!write(2, addressForSlotOffset(slot, i), &data[i], chunkSize))
+    {
       return 0;
     }
   }
@@ -380,11 +443,13 @@ int ECCX08Class::locked()
 {
   byte config[4];
 
-  if (!read(0, 0x15, config, sizeof(config))) {
+  if (!read(0, 0x15, config, sizeof(config)))
+  {
     return 0;
   }
 
-  if (config[2] == 0x00 && config[3] == 0x00) {
+  if (config[2] == 0x00 && config[3] == 0x00)
+  {
     return 1; // locked
   }
 
@@ -394,13 +459,16 @@ int ECCX08Class::locked()
 int ECCX08Class::writeConfiguration(const byte data[])
 {
   // skip first 16 bytes, they are not writable
-  for (int i = 16; i < 128; i += 4) {
-    if (i == 84) {
+  for (int i = 16; i < 128; i += 4)
+  {
+    if (i == 84)
+    {
       // not writable
       continue;
     }
 
-    if (!write(0, i / 4, &data[i], 4)) {
+    if (!write(0, i / 4, &data[i], 4))
+    {
       return 0;
     }
   }
@@ -410,8 +478,10 @@ int ECCX08Class::writeConfiguration(const byte data[])
 
 int ECCX08Class::readConfiguration(byte data[])
 {
-  for (int i = 0; i < 128; i += 32) {
-    if (!read(0, i / 4, &data[i], 32)) {
+  for (int i = 0; i < 128; i += 32)
+  {
+    if (!read(0, i / 4, &data[i], 32))
+    {
       return 0;
     }
   }
@@ -422,35 +492,169 @@ int ECCX08Class::readConfiguration(byte data[])
 int ECCX08Class::lock()
 {
   // lock config
-  if (!lock(0)) {
+  if (!lock(0))
+  {
     return 0;
   }
 
   // lock data and OTP
-  if (!lock(1)) {
+  if (!lock(1))
+  {
     return 0;
   }
 
   return 1;
 }
 
-int ECCX08Class::wakeup()
+void ECCX08Class::atca_calculate_crc(uint8_t length, uint8_t *data)
 {
-  _wire->setClock(_wakeupFrequency);
-  _wire->beginTransmission(0x00);
-  _wire->endTransmission();
+  uint8_t counter;
+  uint16_t crc_register = 0;
+  uint16_t polynom = 0x8005;
+  uint8_t shift_register;
+  uint8_t data_bit, crc_bit;
+  for (counter = 0; counter < length; counter++)
+  {
+    for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1)
+    {
+      data_bit = (data[counter] & shift_register) ? 1 : 0;
+      crc_bit = crc_register >> 15;
+      crc_register <<= 1;
+      if (data_bit != crc_bit)
+        crc_register ^= polynom;
+    }
+  }
+  crc[0] = (uint8_t)(crc_register & 0x00FF);
+  crc[1] = (uint8_t)(crc_register >> 8);
+}
 
-  delayMicroseconds(1500);
+boolean ECCX08Class::checkCount(boolean debug)
+{
+  if (debug)
+  {
+    Serial.print("countGlobal: 0x");
+    Serial.println(countGlobal, HEX);
+    Serial.print("count heard from IC (inpuBuffer[0]): 0x");
+    Serial.println(inputBuffer[0], HEX);
+  }
+  // Check count; the first byte sent from IC is count, and it should be equal to the actual message count
+  if (inputBuffer[0] != countGlobal)
+  {
+    if (debug)
+      Serial.println("Message Count Error");
+    return false;
+  }
+  return true;
+}
 
-  byte response;
+boolean ECCX08Class::receiveResponseData(uint8_t length, boolean debug)
+{
 
-  if (!receiveResponse(&response, sizeof(response)) || response != 0x11) {
-    return 0;
+  // pull in data 32 bytes at at time. (necessary to avoid overflow on atmega328)
+  // if length is less than or equal to 32, then just pull it in.
+  // if length is greater than 32, then we must first pull in 32, then pull in remainder.
+  // lets use length as our tracker and we will subtract from it as we pull in data.
+
+  countGlobal = 0; // reset for each new message (most important, like wensleydale at a cheese party)
+  cleanInputBuffer();
+  byte requestAttempts = 0; // keep track of how many times we've attempted to request, to break out if necessary
+
+  while (length)
+  {
+    byte requestAmount; // amount of bytes to request, needed to pull in data 32 bytes at a time
+    if (length > 32)
+      requestAmount = 32; // as we have more than 32 to pull in, keep pulling in 32 byte chunks
+    else
+      requestAmount = length;                    // now we're ready to pull in the last chunk.
+    _wire->requestFrom(_address, requestAmount); // request bytes from slave
+    requestAttempts++;
+
+    while (_wire->available()) // slave may send less than requested
+    {
+      inputBuffer[countGlobal] = _wire->read(); // receive a byte as character
+      length--;                                 // keep this while loop active until we've pulled in everything
+      countGlobal++;                            // keep track of the count of the entire message.
+    }
+    if (requestAttempts == 20)
+      break; // this probably means that the device is not responding.
   }
 
-  _wire->setClock(_normalFrequency);
+  if (debug)
+  {
+    Serial.print("inputBuffer: ");
+    for (int i = 0; i < countGlobal; i++)
+    {
+      Serial.print(inputBuffer[i], HEX);
+      Serial.print(",");
+    }
+    Serial.println();
+  }
+  return true;
+}
+boolean ECCX08Class::checkCrc(boolean debug)
+{
+  // Check CRC[0] and CRC[1] are good to go.
 
-  return 1;
+  atca_calculate_crc(countGlobal - 2, inputBuffer); // first calculate it
+
+  if (debug)
+  {
+    Serial.print("CRC[0] Calc: 0x");
+    Serial.println(crc[0], HEX);
+    Serial.print("CRC[1] Calc: 0x");
+    Serial.println(crc[1], HEX);
+  }
+
+  if ((inputBuffer[countGlobal - 1] != crc[1]) || (inputBuffer[countGlobal - 2] != crc[0])) // then check the CRCs.
+  {
+    if (debug)
+      Serial.println("Message CRC Error");
+    return false;
+  }
+
+  return true;
+}
+
+int ECCX08Class::wakeup()
+{
+  // _wire->setClock(_wakeupFrequency);
+  // _wire->beginTransmission(0x00);
+  // _wire->endTransmission();
+
+  // delayMicroseconds(1500);
+
+  // byte response;
+
+  // if (!receiveResponse(&response, sizeof(response)) || response != 0x11)
+  // {
+  //   Serial.print("response of wakeup: ");
+  //   Serial.println(response);
+  //   return 1;
+  // }
+
+  // _wire->setClock(_normalFrequency);
+
+  // return 1;
+
+  _wire->beginTransmission(0x00); // set up to write to address "0x00",
+  // This creates a "wake condition" where SDA is held low for at least tWLO
+  // tWLO means "wake low duration" and must be at least 60 uSeconds (which is acheived by writing 0x00 at 100KHz I2C)
+  _wire->endTransmission(); // actually send it
+
+  delayMicroseconds(1500); // required for the IC to actually wake up.
+  // 1500 uSeconds is minimum and known as "Wake High Delay to Data Comm." tWHI, and SDA must be high during this time.
+
+  countGlobal = 0;
+  if (receiveResponseData(4) == false)
+    return false;
+  if (checkCount() == false)
+    return false;
+  if (checkCrc() == false)
+    return false;
+  if (inputBuffer[1] == 0x11)
+    return true; // If we hear a "0x11", that means it had a successful wake up.
+  else
+    return false;
 }
 
 int ECCX08Class::sleep()
@@ -458,7 +662,8 @@ int ECCX08Class::sleep()
   _wire->beginTransmission(_address);
   _wire->write(0x01);
 
-  if (_wire->endTransmission() != 0) {
+  if (_wire->endTransmission() != 0)
+  {
     return 0;
   }
 
@@ -472,7 +677,8 @@ int ECCX08Class::idle()
   _wire->beginTransmission(_address);
   _wire->write(0x02);
 
-  if (_wire->endTransmission() != 0) {
+  if (_wire->endTransmission() != 0)
+  {
     return 0;
   }
 
@@ -485,20 +691,26 @@ long ECCX08Class::version()
 {
   uint32_t version = 0;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x30, 0x00, 0x0000)) {
+  if (!sendCommand(0x30, 0x00, 0x0000))
+  {
+    Serial.println("sendCommand failed");
     return 0;
   }
 
   delay(2);
 
-  if (!receiveResponse(&version, sizeof(version))) {
+  if (!receiveResponse(&version, sizeof(version)))
+  {
+    Serial.println("receiveResponse failed");
     return 0;
   }
-
+  Serial.print("Version: ");
+  Serial.println(version, HEX);
   delay(1);
   idle();
 
@@ -509,25 +721,29 @@ int ECCX08Class::challenge(const byte message[])
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
   // Nounce, pass through
-  if (!sendCommand(0x16, 0x03, 0x0000, message, 32)) {
+  if (!sendCommand(0x16, 0x03, 0x0000, message, 32))
+  {
     return 0;
   }
 
   delay(29);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -538,7 +754,8 @@ int ECCX08Class::verify(const byte signature[], const byte pubkey[])
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
@@ -547,20 +764,23 @@ int ECCX08Class::verify(const byte signature[], const byte pubkey[])
   memcpy(&data[64], pubkey, 64);
 
   // Verify, external, P256
-  if (!sendCommand(0x45, 0x02, 0x0004, data, sizeof(data))) {
+  if (!sendCommand(0x45, 0x02, 0x0004, data, sizeof(data)))
+  {
     return 0;
   }
 
   delay(72);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -569,17 +789,20 @@ int ECCX08Class::verify(const byte signature[], const byte pubkey[])
 
 int ECCX08Class::sign(int slot, byte signature[])
 {
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x41, 0x80, slot)) {
+  if (!sendCommand(0x41, 0x80, slot))
+  {
     return 0;
   }
 
   delay(70);
 
-  if (!receiveResponse(signature, 64)) {
+  if (!receiveResponse(signature, 64))
+  {
     return 0;
   }
 
@@ -591,30 +814,35 @@ int ECCX08Class::sign(int slot, byte signature[])
 
 int ECCX08Class::read(int zone, int address, byte buffer[], int length)
 {
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (length != 4 && length != 32) {
+  if (length != 4 && length != 32)
+  {
     return 0;
   }
 
-  if (length == 32) {
+  if (length == 32)
+  {
     zone |= 0x80;
   }
 
-  if (!sendCommand(0x02, zone, address)) {
+  if (!sendCommand(0x02, zone, address))
+  {
     return 0;
   }
 
   delay(5);
 
-  if (!receiveResponse(buffer, length)) {
+  if (!receiveResponse(buffer, length))
+  {
     return 0;
   }
 
   delay(1);
-  idle();
+  // idle();
 
   return length;
 }
@@ -623,32 +851,38 @@ int ECCX08Class::write(int zone, int address, const byte buffer[], int length)
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (length != 4 && length != 32) {
+  if (length != 4 && length != 32)
+  {
     return 0;
   }
 
-  if (length == 32) {
+  if (length == 32)
+  {
     zone |= 0x80;
   }
 
-  if (!sendCommand(0x12, zone, address, buffer, length)) {
+  if (!sendCommand(0x12, zone, address, buffer, length))
+  {
     return 0;
   }
 
   delay(26);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -659,24 +893,28 @@ int ECCX08Class::lock(int zone)
 {
   uint8_t status;
 
-  if (!wakeup()) {
+  if (!wakeup())
+  {
     return 0;
   }
 
-  if (!sendCommand(0x17, 0x80 | zone, 0x0000)) {
+  if (!sendCommand(0x17, 0x80 | zone, 0x0000))
+  {
     return 0;
   }
 
   delay(32);
 
-  if (!receiveResponse(&status, sizeof(status))) {
+  if (!receiveResponse(&status, sizeof(status)))
+  {
     return 0;
   }
 
   delay(1);
   idle();
 
-  if (status != 0) {
+  if (status != 0)
+  {
     return 0;
   }
 
@@ -686,16 +924,17 @@ int ECCX08Class::lock(int zone)
 int ECCX08Class::addressForSlotOffset(int slot, int offset)
 {
   int block = offset / 32;
-  offset = (offset % 32) / 4;  
+  offset = (offset % 32) / 4;
 
   return (slot << 3) | (block << 8) | (offset);
 }
 
 int ECCX08Class::sendCommand(uint8_t opcode, uint8_t param1, uint16_t param2, const byte data[], size_t dataLength)
 {
+  // Serial.println("Enetered sendCommand");
   int commandLength = 8 + dataLength; // 1 for type, 1 for length, 1 for opcode, 1 for param1, 2 for param2, 2 for crc
-  byte command[commandLength]; 
-  
+  byte command[commandLength];
+
   command[0] = 0x03;
   command[1] = sizeof(command) - 1;
   command[2] = opcode;
@@ -708,61 +947,159 @@ int ECCX08Class::sendCommand(uint8_t opcode, uint8_t param1, uint16_t param2, co
 
   _wire->beginTransmission(_address);
   _wire->write(command, commandLength);
-  if (_wire->endTransmission() != 0) {
+  if (_wire->endTransmission() != 0)
+  {
     return 0;
   }
 
   return 1;
 }
 
-int ECCX08Class::receiveResponse(void* response, size_t length)
+void ECCX08Class::cleanInputBuffer()
+{
+  for (int i = 0; i < sizeof(inputBuffer); i++)
+  {
+    inputBuffer[i] = 0xFF;
+  }
+}
+
+int ECCX08Class::receiveResponse_nocrc(void *response, size_t length)
+{
+  bool debug = false;
+  countGlobal = 0; // reset for each new message (most important, like wensleydale at a cheese party)
+  byte return_resp[length];
+  cleanInputBuffer();
+  byte requestAttempts = 0; // keep track of how many times we've attempted to request, to break out if necessary
+  size_t length_h = length + 3;
+  while (length_h)
+  {
+    byte requestAmount; // amount of bytes to request, needed to pull in data 32 bytes at a time
+    if (length_h > 32)
+      requestAmount = 32; // as we have more than 32 to pull in, keep pulling in 32 byte chunks
+    else
+      requestAmount = length_h;                  // now we're ready to pull in the last chunk.
+    _wire->requestFrom(_address, requestAmount); // request bytes from slave
+    requestAttempts++;
+
+    while (_wire->available()) // slave may send less than requested
+    {
+      inputBuffer[countGlobal] = _wire->read(); // receive a byte as character
+      length_h--;                               // keep this while loop active until we've pulled in everything
+      countGlobal++;                            // keep track of the count of the entire message.
+    }
+    if (requestAttempts == 20)
+      break; // this probably means that the device is not responding.
+  }
+  if (debug)
+  {
+    Serial.print("countGlobal: " + String(countGlobal));
+    Serial.print(" inputBuffer: ");
+    for (int i = 0; i < countGlobal; i++)
+    {
+      Serial.print(inputBuffer[i], HEX);
+      Serial.print(",");
+    }
+    Serial.println();
+  }
+  // int retries = 20;
+  // uint8_t responseSize = length + 3; // 1 for length header, 2 for CRC
+  // byte responseBuffer[responseSize];
+
+  // byte requestAmount; // amount of bytes to request, needed to pull in data 32 bytes at a time
+  // if(length > 32) requestAmount = 32; // as we have more than 32 to pull in, keep pulling in 32 byte chunks
+  // else requestAmount = length +3;
+  // while (_wire->requestFrom((uint8_t)_address,requestAmount) != responseSize && retries--);
+
+  // responseBuffer[0] = _wire->read();
+
+  // // make sure length matches
+  // // if (responseBuffer[0] != responseSize) {
+  // //   return 0;
+  // // }
+
+  // for (size_t i = 1; _wire->available(); i++) {
+  //   responseBuffer[i] = _wire->read();
+  // }
+
+  // // verify CRC
+  // // Serial.println("CRC bits: "+String(responseBuffer[length + 1]) + String(responseBuffer[length + 2]));
+  // uint16_t responseCrc = responseBuffer[length + 1] | (responseBuffer[length + 2] << 8);
+  // if (responseCrc != crc16(responseBuffer, responseSize - 2)) {
+  //   return 0;
+  // }
+
+  for (int i = 0; i < length; i++)
+  {
+    return_resp[i] = inputBuffer[i + 1];
+  }
+  memcpy(response, return_resp, length);
+
+  return 1;
+}
+
+int ECCX08Class::receiveResponse(void *response, size_t length)
 {
   int retries = 20;
   size_t responseSize = length + 3; // 1 for length header, 2 for CRC
   byte responseBuffer[responseSize];
+  // Serial.println("Enetered receiveResponse Input length: " + String(length)+" responsize: "+ String(responseSize));
 
-  while (_wire->requestFrom((uint8_t)_address, (size_t)responseSize, (bool)true) != responseSize && retries--);
+  size_t output = _wire->requestFrom((uint8_t)_address, (uint8_t)responseSize);
+  // Serial.println(" requestFrom Output: " + String(output));
+  while (output != responseSize && output != length && retries--)
+  {
+    output = _wire->requestFrom((uint8_t)_address, (uint8_t)responseSize);
+    Serial.println("Retrying");
+  }
 
-  responseBuffer[0] = _wire->read();
+  // responseBuffer[0] = _wire->read();
 
   // make sure length matches
-  if (responseBuffer[0] != responseSize) {
-    return 0;
-  }
-
-  for (size_t i = 1; _wire->available(); i++) {
+  // if (responseBuffer[0] != responseSize) {
+  //   Serial.println("Length mismatch responseBuffer[0]: "+String(responseBuffer[0]) +"vs responseSize: " + String(responseSize));
+  //   return 0;
+  // }
+  // Serial.print("_wire->available(): ");
+  // Serial.println(_wire->available());
+  for (size_t i = 0; _wire->available(); i++)
+  {
     responseBuffer[i] = _wire->read();
+    // Serial.print(responseBuffer[i], HEX);
+    // Serial.print(" ");
   }
-
+  // Serial.println(" |EOF");
   // verify CRC
-  uint16_t responseCrc = responseBuffer[length + 1] | (responseBuffer[length + 2] << 8);
-  if (responseCrc != crc16(responseBuffer, responseSize - 2)) {
-    return 0;
-  }
-  
-  memcpy(response, &responseBuffer[1], length);
-
+  // uint16_t responseCrc = responseBuffer[length + 1] | (responseBuffer[length + 2] << 8);
+  // if (responseCrc != crc16(responseBuffer, responseSize - 2)) {
+  //   return 0;
+  // }
+  idle();
+    memcpy(response, &responseBuffer[1], length);
   return 1;
 }
 
 uint16_t ECCX08Class::crc16(const byte data[], size_t length)
 {
-  if (data == NULL || length == 0) {
+  if (data == NULL || length == 0)
+  {
     return 0;
   }
 
   uint16_t crc = 0;
 
-  while (length) {
+  while (length)
+  {
     byte b = *data;
 
-    for (uint8_t shift = 0x01; shift > 0x00; shift <<= 1) {
+    for (uint8_t shift = 0x01; shift > 0x00; shift <<= 1)
+    {
       uint8_t dataBit = (b & shift) ? 1 : 0;
       uint8_t crcBit = crc >> 15;
 
       crc <<= 1;
-      
-      if (dataBit != crcBit) {
+
+      if (dataBit != crcBit)
+      {
         crc ^= 0x8005;
       }
     }
@@ -775,7 +1112,7 @@ uint16_t ECCX08Class::crc16(const byte data[], size_t length)
 }
 
 #ifdef CRYPTO_WIRE
-ECCX08Class ECCX08(CRYPTO_WIRE, 0x60);
+// ECCX08Class ECCX08(CRYPTO_WIRE, 0x60);
 #else
-ECCX08Class ECCX08(Wire, 0x60);
+                                                         // ECCX08Class ECCX08(Wire, 0x60);
 #endif

@@ -28,6 +28,9 @@ class ECCX08Class
 public:
   ECCX08Class(TwoWire& wire, uint8_t address);
   virtual ~ECCX08Class();
+	uint8_t inputBuffer[128]; // used to store messages received from the IC as they come in
+	void cleanInputBuffer();
+	uint8_t countGlobal = 0; // used to add up all the bytes on a long message. Important to reset before each new receiveMessageData();
 
   int begin();
   void end();
@@ -58,6 +61,14 @@ public:
   int readConfiguration(byte data[]);
   int lock();
 
+	boolean receiveResponseData(uint8_t length = 0, boolean debug = false);
+	boolean checkCount(boolean debug = false);
+	boolean checkCrc(boolean debug = false);
+  void atca_calculate_crc(uint8_t length, uint8_t *data);
+	uint8_t crc[2] = {0, 0};
+
+
+
 private:
   int wakeup();
   int sleep();
@@ -76,6 +87,8 @@ private:
 
   int sendCommand(uint8_t opcode, uint8_t param1, uint16_t param2, const byte data[] = NULL, size_t dataLength = 0);
   int receiveResponse(void* response, size_t length);
+  int receiveResponse_nocrc(void* response, size_t length);
+
   uint16_t crc16(const byte data[], size_t length);
 
 private:
