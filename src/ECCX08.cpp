@@ -721,7 +721,7 @@ int ECCX08Class::receiveResponse(void* response, size_t length)
   size_t responseSize = length + 3; // 1 for length header, 2 for CRC
   byte responseBuffer[responseSize];
 
-  while (_wire->requestFrom((uint8_t)_address, (size_t)responseSize, (bool)true) != responseSize && retries--);
+  while (_wire->requestFrom((uint8_t)_address, (size_t)responseSize, (uint8_t)true) != responseSize && retries--);
 
   responseBuffer[0] = _wire->read();
 
