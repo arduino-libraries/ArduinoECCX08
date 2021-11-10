@@ -38,6 +38,12 @@ ECCX08Class::~ECCX08Class()
 {
 }
 
+int ECCX08Class::begin(uint8_t i2cAddress)
+{
+  _address = i2cAddress;
+  return begin();
+}
+
 int ECCX08Class::begin()
 {
   _wire->begin();
