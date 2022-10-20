@@ -443,6 +443,12 @@ int ECCX08Class::lock()
 
 int ECCX08Class::beginHMAC(uint16_t keySlot)
 {
+  // HMAC implementation is only for ATECC608
+  long ver = version() & 0x0F00000;
+  if (ver != 0x0600000) {
+    return 0;
+  }
+
   uint8_t status;
 
   if (!wakeup()) {
