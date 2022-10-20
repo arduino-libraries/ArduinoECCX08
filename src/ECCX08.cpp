@@ -405,7 +405,7 @@ int ECCX08Class::writeConfiguration(const byte data[])
       // not writable
       continue;
     }
-    
+
     if (!write(0, i / 4, &data[i], 4)) {
       return 0;
     }
@@ -476,6 +476,7 @@ int ECCX08Class::updateHMAC(const byte data[], int length) {
     return 0;
   }
 
+  // Processing message
   int currLength = 0;
   while (length) {
     data += currLength;
@@ -486,8 +487,8 @@ int ECCX08Class::updateHMAC(const byte data[], int length) {
       currLength = length;
     }
     length -= currLength;
-
-    if (!sendCommand(0x47, 0x01, length, data, length)) {
+    
+    if (!sendCommand(0x47, 0x01, currLength, data, currLength)) {
       return 0;
     }
 
