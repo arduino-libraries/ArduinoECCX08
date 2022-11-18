@@ -448,7 +448,7 @@ int ECCX08Class::beginHMAC(uint16_t keySlot)
   long ecc608ver = 0x0600000;
   long eccCurrVer = version() & 0x0F00000;
   
-  if (eccCurVer != ecc608ver) {
+  if (eccCurrVer != ecc608ver) {
     return 0;
   }
 
