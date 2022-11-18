@@ -12,6 +12,8 @@
 
 #include <ArduinoECCX08.h>
 
+#define TEMPKEY_SLOT 0xFFFF
+
 byte nonceKey[] = {
     0x10, 0x10, 0x10, 0x10
 };
@@ -47,7 +49,7 @@ void setup() {
     }
 
     // Starting HMAC operation on tempkey slot
-    if (!ECCX08.beginHMAC(0xFFFF)) {
+    if (!ECCX08.beginHMAC(TEMPKEY_SLOT)) {
         Serial.println("Failed to start HMAC operation.");
         while (1);
     }
