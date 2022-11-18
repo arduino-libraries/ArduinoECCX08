@@ -4,7 +4,7 @@
     This sketch uses the ECC608 to generate an hmac on some data.
     Stores key using nonce.
 
-    Used the Arduino Nano RP2040.
+    Tested on the Arduino Nano RP2040.
 
     created 10 October 2022
     by Raul Leclair
@@ -28,21 +28,21 @@ byte data[] = {
     0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
 };
 
-int dataLength = 72;
+int dataLength = sizeof(data);
 
 void setup() {
     Serial.begin(115200);
     while (!Serial);
 
     if (!ECCX08.begin()) {
-        Serial.println("Failed to initialize ECC608 board.");
+        Serial.println("Failed to initialize ECCX08 board.");
         while (1);
     }
 
     // Perform nonce
     if (!ECCX08.nonce(nonceKey))
     {
-        Serial.println("Failed to do nonce.");
+        Serial.println("Failed to perform nonce.");
         while (1);
     }
 
@@ -64,7 +64,7 @@ void setup() {
     }
 
     Serial.println("HMAC Result: ");
-    for (int i = 0; i<sizeof(resultHMAC); i++) {
+    for (int i = 0; i < sizeof(resultHMAC); i++) {
         char hexChar[2];
         sprintf(hexChar, "%02X", resultHMAC[i]);
         Serial.print(hexChar);
