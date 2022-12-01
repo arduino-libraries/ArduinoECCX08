@@ -440,6 +440,114 @@ int ECCX08Class::lock()
   return 1;
 }
 
+
+int ECCX08Class::beginHMAC(uint16_t keySlot)
+{
+  // HMAC implementation is only for ATECC608
+  uint8_t status;
+  long ecc608ver = 0x0600000;
+  long eccCurrVer = version() & 0x0F00000;
+  
+  if (eccCurrVer != ecc608ver) {
+    return 0;
+  }
+
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x47, 0x04, keySlot)) {
+    return 0;
+  }
+
+  delay(9);
+
+  if (!receiveResponse(&status, sizeof(status))) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  if (status != 0) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int ECCX08Class::updateHMAC(const byte data[], int length) {
+  uint8_t status;
+
+  if (!wakeup()) {
+    return 0;
+  }
+
+  // Processing message
+  int currLength = 0;
+  while (length) {
+    data += currLength;
+
+    if (length > 64) {
+      currLength = 64;
+    } else {
+      currLength = length;
+    }
+    length -= currLength;
+    
+    if (!sendCommand(0x47, 0x01, currLength, data, currLength)) {
+      return 0;
+    }
+
+    delay(9);
+
+    if (!receiveResponse(&status, sizeof(status))) {
+      return 0;
+    }
+
+    delay(1);
+  }
+  idle();
+
+  if (status != 0) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int ECCX08Class::endHMAC(byte result[])
+{
+  return endHMAC(NULL, 0, result);
+}
+
+int ECCX08Class::endHMAC(const byte data[], int length, byte result[])
+{
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x47, 0x02, length, data, length)) {
+    return 0;
+  }
+
+  delay(9);
+
+  if (!receiveResponse(result, 32)) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
+int ECCX08Class::nonce(const byte data[])
+{
+  return challenge(data);
+}
+
 int ECCX08Class::wakeup()
 {
   _wire->setClock(_wakeupFrequency);

@@ -59,6 +59,13 @@ public:
   int readConfiguration(byte data[]);
   int lock();
 
+  int beginHMAC(uint16_t keySlot);
+  int updateHMAC(const byte data[], int length);
+  int endHMAC(byte result[]);
+  int endHMAC(const byte data[], int length, byte result[]);
+
+  int nonce(const byte data[]);
+
 private:
   int wakeup();
   int sleep();
