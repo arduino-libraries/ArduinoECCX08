@@ -1,7 +1,7 @@
 /*
     ECCX08 HMAC functionality example
 
-    This sketch uses the ECC608 to generate an hmac on some data.
+    This sketch uses the ECC608 to generate an HMAC on some data.
     Stores key using nonce.
 
     Tested on the Arduino Nano RP2040.

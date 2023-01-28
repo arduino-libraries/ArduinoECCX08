@@ -2,7 +2,7 @@
   ECCX08 Random Number
 
   This sketch uses the ECC508 or ECC608 to generate a random number 
-  every second and print it to the Serial monitor
+  every second and print it to the Serial Monitor
 
   Circuit:
    - MKR board with ECC508 or ECC608 on board
