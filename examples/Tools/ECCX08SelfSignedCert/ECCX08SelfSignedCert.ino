@@ -4,7 +4,7 @@
   This sketch can be used to generate a self signed certificate
   for a private key generated in an ECC508/ECC608 crypto chip slot.
   The issue and expired date, and signature are stored in another
-  slot for reconstrution.
+  slot for reconstruction.
 
   If the ECC508/ECC608 is not configured and locked it prompts
   the user to configure and lock the chip with a default TLS

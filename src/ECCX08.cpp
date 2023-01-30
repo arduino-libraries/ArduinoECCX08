@@ -62,7 +62,7 @@ int ECCX08Class::begin()
 
 void ECCX08Class::end()
 {
-  // First wake up the device otherwise the chip didn't react to a sleep commando
+  // First wake up the device otherwise the chip didn't react to a sleep command
   wakeup();
   sleep();
 #ifdef WIRE_HAS_END
@@ -627,7 +627,7 @@ int ECCX08Class::challenge(const byte message[])
     return 0;
   }
 
-  // Nounce, pass through
+  // Nonce, pass through
   if (!sendCommand(0x16, 0x03, 0x0000, message, 32)) {
     return 0;
   }
@@ -807,7 +807,7 @@ int ECCX08Class::addressForSlotOffset(int slot, int offset)
 
 int ECCX08Class::sendCommand(uint8_t opcode, uint8_t param1, uint16_t param2, const byte data[], size_t dataLength)
 {
-  int commandLength = 8 + dataLength; // 1 for type, 1 for length, 1 for opcode, 1 for param1, 2 for param2, 2 for crc
+  int commandLength = 8 + dataLength; // 1 for type, 1 for length, 1 for opcode, 1 for param1, 2 for param2, 2 for CRC
   byte command[commandLength]; 
   
   command[0] = 0x03;

@@ -3,7 +3,7 @@
 
   This sketch uses the ECC508 or ECC608 to sign some data
   using the private key of a key slot, the signature
-  is printed to the Serial monitor. Then the signature is
+  is printed to the Serial Monitor. Then the signature is
   verified using the public key of the slot.
 
   NOTE: the input data must be 64 bytes in length!
@@ -69,14 +69,14 @@ void setup() {
 
   Serial.println();
 
-  // To make the signature verifcation fail, uncomment the next line:
+  // To make the signature verification fail, uncomment the next line:
   //  signature[0] = 0x00;
 
   // validate the signature
   if (ECCX08.ecdsaVerify(input, signature, publicKey)) {
     Serial.println("Verified signature successfully :D");
   } else {
-    Serial.println("oh no! failed to verify signature :(");
+    Serial.println("Oh no! Failed to verify signature :(");
   }
 }
 
