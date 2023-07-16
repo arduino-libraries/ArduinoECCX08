@@ -66,6 +66,9 @@ public:
 
   int nonce(const byte data[]);
 
+  long incrementCounter(int keyId);
+  long readCounter(int keyId);
+
 private:
   int wakeup();
   int sleep();
