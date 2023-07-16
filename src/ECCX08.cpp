@@ -548,6 +548,54 @@ int ECCX08Class::nonce(const byte data[])
   return challenge(data);
 }
 
+long ECCX08Class::incrementCounter(int keyId)
+{
+  uint32_t counter;  // the counter can go up to 2,097,151
+
+  if (!wakeup()) {
+    return -1;
+  }
+
+  if (!sendCommand(0x24, 1, keyId)) {
+    return -1;
+  }
+
+  delay(20);
+
+  if (!receiveResponse(&counter, sizeof(counter))) {
+    return -1;
+  }
+
+  delay(1);
+  idle();
+
+  return counter;
+}
+
+long ECCX08Class::readCounter(int keyId)
+{
+  uint32_t counter;  // the counter can go up to 2,097,151
+
+  if (!wakeup()) {
+    return -1;
+  }
+
+  if (!sendCommand(0x24, 0, keyId)) {
+    return -1;
+  }
+
+  delay(20);
+
+  if (!receiveResponse(&counter, sizeof(counter))) {
+    return -1;
+  }
+
+  delay(1);
+  idle();
+
+  return counter;
+}
+
 int ECCX08Class::wakeup()
 {
   _wire->setClock(_wakeupFrequency);
