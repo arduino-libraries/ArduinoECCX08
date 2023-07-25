@@ -43,6 +43,8 @@ jobs:
           - fqbn: arduino:samd:mkrnb1500
           - fqbn: arduino:samd:mkrvidor4000
           - fqbn: arduino:mbed_nano:nanorp2040connect
+          - fqbn: arduino:mbed_opta:opta
+          - fqbn: arduino:mbed_giga:giga
 
     steps:
       - name: Checkout
