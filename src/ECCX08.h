@@ -51,6 +51,24 @@ public:
   int endSHA256(byte result[]);
   int endSHA256(const byte data[], int length, byte result[]);
 
+  int ecdh(int slot, byte mode, const byte pubKeyXandY[], byte sharedSecret[]);
+  #define ECDH_MODE_TEMPKEY               ((uint8_t)0x08)         //!< ECDH mode: write to TempKey
+  #define ECDH_MODE_OUTPUT                ((uint8_t)0x0c)         //!< ECDH mode: write to buffer
+
+  int AESEncrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ptLength);
+  int AESDecrypt(byte IV[], byte ad[], byte pt[], byte ct[], byte tag[], const uint64_t adLength, const uint64_t ctLength);
+
+  int AESGCTR(byte counterBlock[], byte input[], byte output[], const uint64_t inputLength);
+  int AESGHASH(byte counterBlock[], byte input[], byte output[], const uint64_t inputLength);
+
+  int AESIncrementBlock(byte counterBlock[]);
+  int AESBlockEncrypt(byte block[]);
+  int AESBlockMultiplication(byte H[], byte block[]);
+
+  int AESGenIV(byte IV[]);
+  int incrementCounter(int slot, byte counter[]);
+  int readCounter(int slot, byte counter[]);
+
   int readSlot(int slot, byte data[], int length);
   int writeSlot(int slot, const byte data[], int length);
 

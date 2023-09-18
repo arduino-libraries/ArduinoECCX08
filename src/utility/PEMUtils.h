@@ -25,6 +25,8 @@
 class PEMUtilsClass {
 public:
    String base64Encode(const byte in[], unsigned int length, const char* prefix, const char* suffix);
+   int base64Decode(const String in, byte out[]);
+   int xyFromPubKeyPEM(const String in, byte xy[64]);
 };
 
 extern PEMUtilsClass PEMUtils;
