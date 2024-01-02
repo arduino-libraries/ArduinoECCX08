@@ -548,50 +548,76 @@ int ECCX08Class::nonce(const byte data[])
   return challenge(data);
 }
 
-long ECCX08Class::incrementCounter(int keyId)
+int ECCX08Class::incrementCounter(int counterId, long& counter)
 {
-  uint32_t counter;  // the counter can go up to 2,097,151
-
-  if (!wakeup()) {
-    return -1;
+  if (counterId < 0 || counterId > 1) {
+    return 0;
   }
 
-  if (!sendCommand(0x24, 1, keyId)) {
-    return -1;
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x24, 1, counterId)) {
+    return 0;
   }
 
   delay(20);
 
   if (!receiveResponse(&counter, sizeof(counter))) {
-    return -1;
+    return 0;
   }
 
   delay(1);
   idle();
+
+  return 1;
+}
+
+long ECCX08Class::incrementCounter(int counterId)
+{
+  long counter;  // the counter can go up to 2,097,151
+
+  if(!incrementCounter(counterId, counter)) {
+    return -1;
+  }
 
   return counter;
 }
 
-long ECCX08Class::readCounter(int keyId)
+int ECCX08Class::readCounter(int counterId, long& counter)
 {
-  uint32_t counter;  // the counter can go up to 2,097,151
-
-  if (!wakeup()) {
-    return -1;
+  if (counterId < 0 || counterId > 1) {
+    return 0;
   }
 
-  if (!sendCommand(0x24, 0, keyId)) {
-    return -1;
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x24, 0, counterId)) {
+    return 0;
   }
 
   delay(20);
 
   if (!receiveResponse(&counter, sizeof(counter))) {
-    return -1;
+    return 0;
   }
 
   delay(1);
   idle();
+
+  return 1;
+}
+
+long ECCX08Class::readCounter(int counterId)
+{
+  long counter;  // the counter can go up to 2,097,151
+
+  if(!readCounter(counterId, counter)) {
+    return -1;
+  }
 
   return counter;
 }
