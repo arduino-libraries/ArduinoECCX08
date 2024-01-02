@@ -160,4 +160,7 @@ String ECCX08JWSClass::sign(int slot, const String& header, const String& payloa
   return sign(slot, header.c_str(), payload.c_str());
 }
 
+#include "ECCX08UtilsConfig.h"
+#if defined(ECCX08_ENABLE_JWS)
 ECCX08JWSClass ECCX08JWS;
+#endif

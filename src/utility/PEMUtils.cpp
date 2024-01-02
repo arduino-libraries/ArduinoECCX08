@@ -68,4 +68,7 @@ String PEMUtilsClass::base64Encode(const byte in[], unsigned int length, const c
   return out;
 }
 
+#include "ECCX08UtilsConfig.h"
+#if defined(ECCX08_ENABLE_PEM)
 PEMUtilsClass PEMUtils;
+#endif

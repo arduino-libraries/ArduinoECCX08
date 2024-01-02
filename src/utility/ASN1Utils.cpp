@@ -410,4 +410,7 @@ int ASN1UtilsClass::appendEcdsaWithSHA256(byte out[])
   return 12;
 }
 
+#include "ECCX08UtilsConfig.h"
+#if defined(ECCX08_ENABLE_ASN1)
 ASN1UtilsClass ASN1Utils;
+#endif
