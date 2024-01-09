@@ -406,4 +406,7 @@ void ECCX08SelfSignedCertClass::appendCertInfo(uint8_t publicKey[], uint8_t buff
   *out++ = 0x00;
 }
 
+#include "ECCX08UtilsConfig.h"
+#if defined(ECCX08_ENABLE_SSC)
 ECCX08SelfSignedCertClass ECCX08SelfSignedCert;
+#endif

@@ -173,5 +173,7 @@ void ECCX08CSRClass::setCommonName(const char* commonName)
   _commonName = commonName;
 }
 
-
+#include "ECCX08UtilsConfig.h"
+#if defined(ECCX08_ENABLE_CSR)
 ECCX08CSRClass ECCX08CSR;
+#endif
