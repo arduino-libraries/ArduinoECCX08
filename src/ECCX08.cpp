@@ -548,6 +548,80 @@ int ECCX08Class::nonce(const byte data[])
   return challenge(data);
 }
 
+int ECCX08Class::incrementCounter(int counterId, long& counter)
+{
+  if (counterId < 0 || counterId > 1) {
+    return 0;
+  }
+
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x24, 1, counterId)) {
+    return 0;
+  }
+
+  delay(20);
+
+  if (!receiveResponse(&counter, sizeof(counter))) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
+long ECCX08Class::incrementCounter(int counterId)
+{
+  long counter;  // the counter can go up to 2,097,151
+
+  if(!incrementCounter(counterId, counter)) {
+    return -1;
+  }
+
+  return counter;
+}
+
+int ECCX08Class::readCounter(int counterId, long& counter)
+{
+  if (counterId < 0 || counterId > 1) {
+    return 0;
+  }
+
+  if (!wakeup()) {
+    return 0;
+  }
+
+  if (!sendCommand(0x24, 0, counterId)) {
+    return 0;
+  }
+
+  delay(20);
+
+  if (!receiveResponse(&counter, sizeof(counter))) {
+    return 0;
+  }
+
+  delay(1);
+  idle();
+
+  return 1;
+}
+
+long ECCX08Class::readCounter(int counterId)
+{
+  long counter;  // the counter can go up to 2,097,151
+
+  if(!readCounter(counterId, counter)) {
+    return -1;
+  }
+
+  return counter;
+}
+
 int ECCX08Class::wakeup()
 {
   _wire->setClock(_wakeupFrequency);

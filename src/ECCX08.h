@@ -66,6 +66,11 @@ public:
 
   int nonce(const byte data[]);
 
+  int incrementCounter(int counterId, long& counter);
+  long incrementCounter(int counterId);
+  int readCounter(int counterId, long& counter);
+  long readCounter(int counterId);
+
 private:
   int wakeup();
   int sleep();
