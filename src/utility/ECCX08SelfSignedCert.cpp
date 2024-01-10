@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include "ECCX08Config.h"
 #include "ArduinoECCX08.h"
 
 extern "C" {
@@ -406,7 +407,6 @@ void ECCX08SelfSignedCertClass::appendCertInfo(uint8_t publicKey[], uint8_t buff
   *out++ = 0x00;
 }
 
-#include "ECCX08UtilsConfig.h"
-#if defined(ECCX08_ENABLE_SSC)
+#if !defined(ECCX08_DISABLE_SSC)
 ECCX08SelfSignedCertClass ECCX08SelfSignedCert;
 #endif

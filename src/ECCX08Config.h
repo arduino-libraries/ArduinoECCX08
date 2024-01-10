@@ -17,23 +17,13 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _ECCX08_UTILS_CONFIG_H_
-#define _ECCX08_UTILS_CONFIG_H_
+#ifndef _ECCX08_CONFIG_H_
+#define _ECCX08_CONFIG_H_
 
 #if defined __has_include
-  #if !__has_include ("ArduinoIoTCloud.h")
-    #define ECCX08_ENABLE_ASN1 1
-    #define ECCX08_ENABLE_CSR  1
-    #define ECCX08_ENABLE_JWS  1
-    #define ECCX08_ENABLE_SSC  1
-    #define ECCX08_ENABLE_PEM  1
+  #if __has_include (<ArduinoECCX08Config.h>)
+    #include <ArduinoECCX08Config.h>
   #endif
-#else
-  #define ECCX08_ENABLE_ASN1 1
-  #define ECCX08_ENABLE_CSR  1
-  #define ECCX08_ENABLE_JWS  1
-  #define ECCX08_ENABLE_SSC  1
-  #define ECCX08_ENABLE_PEM  1
 #endif
 
 #endif
