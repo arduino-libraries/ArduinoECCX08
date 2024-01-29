@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include "ECCX08Config.h"
 #include "ASN1Utils.h"
 
 int ASN1UtilsClass::versionLength()
@@ -410,7 +411,6 @@ int ASN1UtilsClass::appendEcdsaWithSHA256(byte out[])
   return 12;
 }
 
-#include "ECCX08UtilsConfig.h"
-#if defined(ECCX08_ENABLE_ASN1)
+#if !defined(ECCX08_DISABLE_ASN1)
 ASN1UtilsClass ASN1Utils;
 #endif
