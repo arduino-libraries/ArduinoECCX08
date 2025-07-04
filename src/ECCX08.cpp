@@ -915,6 +915,12 @@ int ECCX08Class::receiveResponse(void* response, size_t length)
 
   // make sure length matches
   if (responseBuffer[0] != responseSize) {
+    // Clear the buffer
+    for (size_t i = 1; _wire->available(); i++) {
+      (void) _wire->read();
+    }
+    delay(1);
+    idle();
     return 0;
   }
 
@@ -925,9 +931,11 @@ int ECCX08Class::receiveResponse(void* response, size_t length)
   // verify CRC
   uint16_t responseCrc = responseBuffer[length + 1] | (responseBuffer[length + 2] << 8);
   if (responseCrc != crc16(responseBuffer, responseSize - 2)) {
+    delay(1);
+    idle();
     return 0;
   }
-  
+
   memcpy(response, &responseBuffer[1], length);
 
   return 1;
