@@ -1,8 +1,8 @@
 /*
   ECCX08 Counter
 
-  This sketch uses the ECC508 or ECC608 to increment a monotonic 
-  counter at each startup
+  This sketch uses the ECC508 or ECC608 to increment a monotonic
+  counter at each startup.
 
   Circuit:
    - Any board with ECC508 or ECC608 on board
@@ -11,7 +11,8 @@
 
 #include <ArduinoECCX08.h>
 
-const int keyId = 5;
+// The counter to be incremented. Only zero and one are legal values.
+const int counterId = 0;
 long counter = -1;
 
 void setup() {
@@ -22,15 +23,15 @@ void setup() {
     Serial.println("Failed to communicate with ECC508/ECC608!");
     while (1);
   }
-  
-  if (!ECCX08.incrementCounter(keyId, counter)) {
+
+  if (!ECCX08.incrementCounter(counterId, counter)) {
     Serial.println("Failed to increment counter");
     while (1);
   }
 }
 
 void loop() {
-  if (!ECCX08.readCounter(keyId, counter)) {
+  if (!ECCX08.readCounter(counterId, counter)) {
     Serial.println("Failed to read counter");
     while (1);
   }
