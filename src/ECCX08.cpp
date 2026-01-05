@@ -970,6 +970,12 @@ uint16_t ECCX08Class::crc16(const byte data[], size_t length)
   return crc;
 }
 
+#if __ZEPHYR__
+  #ifndef CRYPTO_WIRE
+    #define CRYPTO_WIRE Wire1
+  #endif
+#endif
+
 #ifdef CRYPTO_WIRE
 ECCX08Class ECCX08(CRYPTO_WIRE, 0x60);
 #else
