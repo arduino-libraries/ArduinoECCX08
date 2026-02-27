@@ -58,6 +58,15 @@ jobs:
             artifact-name-suffix: arduino-mbed_opta-opta
           - fqbn: arduino:mbed_giga:giga
             artifact-name-suffix: arduino-mbed_giga-giga
+          - fqbn: "arduino:zephyr_main:portentah7"
+            platform-name: arduino:zephyr_main
+            artifact-name-suffix: arduino-zephyr_main-portentah7
+          - fqbn: "arduino:zephyr_main:giga"
+            platform-name: arduino:zephyr_main
+            artifact-name-suffix: arduino-zephyr_main-giga
+          - fqbn: "arduino:zephyr_main:opta"
+            platform-name: arduino:zephyr_main
+            artifact-name-suffix: arduino-zephyr_main-opta
 
     steps:
       - name: Checkout
