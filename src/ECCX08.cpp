@@ -24,6 +24,9 @@
 const uint32_t ECCX08Class::_wakeupFrequency = 100000u;  // 100 kHz
 #ifdef __AVR__
 const uint32_t ECCX08Class::_normalFrequency = 400000u;  // 400 kHz
+#elif defined(ARDUINO_ARCH_ZEPHYR) && defined(ARDUINO_PORTENTA_H7_M7)
+// FIXME speed above 400kHz require manual configuration in stm32 running on zephyr
+const uint32_t ECCX08Class::_normalFrequency = 400000u;
 #else
 const uint32_t ECCX08Class::_normalFrequency = 1000000u; // 1 MHz
 #endif
@@ -969,6 +972,12 @@ uint16_t ECCX08Class::crc16(const byte data[], size_t length)
 
   return crc;
 }
+
+#if __ZEPHYR__
+  #ifndef CRYPTO_WIRE
+    #define CRYPTO_WIRE Wire1
+  #endif
+#endif
 
 #ifdef CRYPTO_WIRE
 ECCX08Class ECCX08(CRYPTO_WIRE, 0x60);
