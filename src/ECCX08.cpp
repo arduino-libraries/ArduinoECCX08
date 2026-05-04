@@ -73,8 +73,12 @@ void ECCX08Class::end()
 #endif
 }
 
-int ECCX08Class::serialNumber(byte sn[])
+int ECCX08Class::serialNumber(byte sn[], size_t len)
 {
+  if(len < 12) {
+    return 0;
+  }
+
   if (!read(0, 0, &sn[0], 4)) {
     return 0;
   }
@@ -250,6 +254,18 @@ int ECCX08Class::ecSign(int slot, const byte message[], byte signature[])
   }
 
   return 1;
+}
+
+int ECCX08Class::SHA256(const uint8_t *buffer, size_t size, uint8_t *digest)
+{
+  beginSHA256();
+  uint8_t * cursor = (uint8_t*)buffer;
+  uint32_t bytes_read = 0;
+
+  for(; bytes_read + 64 < size; bytes_read += 64, cursor += 64) {
+    updateSHA256(cursor);
+  }
+  return endSHA256(cursor, size - bytes_read, digest);
 }
 
 int ECCX08Class::beginSHA256()
