@@ -22,6 +22,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include "utility/ECCX08DefaultTLSConfig.h"
 
 class ECCX08Class
 {
@@ -33,7 +34,7 @@ public:
   int begin(uint8_t i2cAddress);
   void end();
 
-  int serialNumber(byte sn[]);
+  int serialNumber(byte sn[], size_t length=12);
   String serialNumber();
 
   long random(long max);
@@ -46,6 +47,7 @@ public:
   int ecdsaVerify(const byte message[], const byte signature[], const byte pubkey[]);
   int ecSign(int slot, const byte message[], byte signature[]);
 
+  int SHA256(const uint8_t *buffer, size_t size, uint8_t *digest);
   int beginSHA256();
   int updateSHA256(const byte data[]); // 64 bytes
   int endSHA256(byte result[]);
@@ -55,7 +57,7 @@ public:
   int writeSlot(int slot, const byte data[], int length);
 
   int locked();
-  int writeConfiguration(const byte data[]);
+  int writeConfiguration(const byte data[]=ECCX08_DEFAULT_TLS_CONFIG);
   int readConfiguration(byte data[]);
   int lock();
 
